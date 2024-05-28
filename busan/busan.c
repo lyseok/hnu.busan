@@ -43,8 +43,8 @@ int intro(void);
 int setup(int* trainLength, int* stm, int* probability);
 // int printPattern(int len, int p_M, int p_Z, int p_C);
 int printPattern(int len, Character characters[], int numCharacters);
-int printStatus(int len, Character characters[], int m_p_C, int m_p_Z, int turn);
-int printMadongseok(int len, Character characters[], int m_p_M);
+int printStatus(int len, Character characters[], int m_p_C, int m_p_Z, int turn, int aggro);
+int printMadongseok(int len, Character characters[], int m_p_M, int aggro);
 int moveCitizen(int p, Character characters[]);
 int moveZombie(int p, Character characters[]);
 int moveMadongseok(int move, Character characters[]);
@@ -65,6 +65,7 @@ int main(void) {
 	int m_p_M, m_p_Z, m_p_C;
 	int turn = 0;
 	int move = 0;
+	int aggro;
 	int m;
 
 	srand((unsigned int)time(NULL));
@@ -88,12 +89,12 @@ int main(void) {
 	int numCharacters = 1 + numCitizens + numZombies;
 
 	//열차 초기 상태 출력
-	//printPattern(trainLength, p_M, p_Z, p_C);
 	printPattern(trainLength, characters, numCharacters);
 
 	
 	while (1) {
 		//시민 이동
+		aggro = characters[1].aggro;
 		m_p_C = moveCitizen(probability, characters);
 
 		//좀비 이동
@@ -103,17 +104,20 @@ int main(void) {
 		printPattern(trainLength, characters, numCharacters);
 
 		//시민, 좀비 상태 출력
-		printStatus(trainLength, characters, m_p_C, m_p_Z, turn);
+		printStatus(trainLength, characters, m_p_C, m_p_Z, turn, aggro);
+
+		characters[1].position = m_p_C;
+		characters[2].position = m_p_Z;
 
 		printf("madongseok move(0:stay, 1:left)>>");
 		scanf_s("%d", &move);
-
+		aggro = characters[0].aggro;
 		m_p_M = moveMadongseok(move, characters);
 
 		//열차 상태 출력
 		printPattern(trainLength, characters, numCharacters);
 
-		printMadongseok(trainLength, characters, m_p_M);
+		printMadongseok(trainLength, characters, m_p_M, aggro);
 
 		printf("cityzen does nothing.\n");
 		printf("zombie attcked nobody\n");
@@ -121,16 +125,14 @@ int main(void) {
 		scanf_s("%d", &m);
 
 		characters[0].position = m_p_M;
-		characters[1].position = m_p_C;
-		characters[2].position = m_p_Z;
 
 
-		if (trainLength - p_C == 1) {
+		if (trainLength - characters[1].position == 1) {
 			game = 1;
 			break;
 		}
 
-		if (p_C - p_Z <= 1) {
+		if (characters[1].position - characters[2].position <= 1) {
 			game = 2;
 			break;
 		}
@@ -219,12 +221,12 @@ int printPattern(int len, Character characters[], int numCharacters) {
 }
 
 
-int printStatus(int len, Character characters[], int m_p_C, int m_p_Z, int turn) {
+int printStatus(int len, Character characters[], int m_p_C, int m_p_Z, int turn, int aggro) {
 	if (characters[1].position == m_p_C) {
-		printf("citizen: stay %d (aggro: %d)\n", len - m_p_C);
+		printf("citizen: stay %d (aggro: %d -> %d)\n", len - m_p_C, aggro, characters[1].aggro);
 	}
 	else {
-		printf("citizen: %d -> %d (aggro: %d)\n", len - characters[1].position, len - m_p_C, characters[1].aggro);
+		printf("citizen: %d -> %d (aggro: %d -> %d)\n", len - characters[1].position, len - m_p_C, aggro, characters[1].aggro);
 	}
 	if (turn % 2 == 0) {
 		if (characters[2].position == m_p_Z) {
@@ -241,14 +243,14 @@ int printStatus(int len, Character characters[], int m_p_C, int m_p_Z, int turn)
 	return 0;
 }
 
-int printMadongseok(int len, Character characters[], int m_p_M) {
+int printMadongseok(int len, Character characters[], int m_p_M, int aggro) {
 	if (characters[0].position == m_p_M) {
-		printf("madongseok: stay %d(aggro: %d, stamina: %d)\n", 
-			len - characters[0].position, characters[0].aggro, characters[0].stamina);
+		printf("madongseok: stay %d(aggro: %d -> %d, stamina: %d)\n", 
+			len - characters[0].position, aggro, characters[0].aggro, characters[0].stamina);
 	}
 	else {
-		printf("madongseok: %d -> %d (aggro: %d, stamina: %d)\n", 
-			len - characters[0].position, len - m_p_M, characters[0].aggro, characters[0].stamina);
+		printf("madongseok: %d -> %d (aggro: %d -> %d, stamina: %d)\n", 
+			len - characters[0].position, len - m_p_M, aggro, characters[0].aggro, characters[0].stamina);
 	}
 }
 
@@ -260,9 +262,13 @@ int moveCitizen(int probability, Character characters[]) {
 
 	if (p >= num) {
 		move_p_C = characters[1].position + 1;
+		characters[1].aggro++;
+		if (characters[1].aggro > AGGRO_MAX) characters[1].aggro = AGGRO_MAX;
 	}
 	else {
 		move_p_C = characters[1].position;
+		characters[1].aggro--;
+		if (characters[1].aggro < AGGRO_MIN) characters[1].aggro = AGGRO_MIN;
 	}
 
 	return move_p_C;
@@ -271,15 +277,27 @@ int moveCitizen(int probability, Character characters[]) {
 
 int moveZombie(int p, Character characters[]) {
 	int move_p_Z;
-	int num = rand() % 100 + 1;
 
-	if (p >= num) {
-		move_p_Z = characters[2].position + 1;
+	if (characters[0].aggro > characters[1].aggro) {
+		if (characters[0].position < characters[2].position) {
+			move_p_Z = characters[2].position - 1;
+			if (characters[0].position == move_p_Z) move_p_Z = characters[2].position;
+		}
+		else {
+			move_p_Z = characters[2].position + 1;
+			if (characters[0].position == move_p_Z) move_p_Z = characters[2].position;
+		}
 	}
 	else {
-		move_p_Z = characters[2].position;
+		if (characters[1].position < characters[2].position) {
+			move_p_Z = characters[2].position - 1;
+			if (characters[1].position == move_p_Z) move_p_Z = characters[2].position;
+		}
+		else {
+			move_p_Z = characters[2].position + 1;
+			if (characters[1].position == move_p_Z) move_p_Z = characters[2].position;
+		}
 	}
-
 	return move_p_Z;
 }
 
@@ -288,9 +306,13 @@ int moveMadongseok(int move, Character characters[]) {
 
 	if (move == 1) {
 		move_p_M = characters[0].position + 1;
+		characters[0].aggro++;
+		if(characters[0].aggro > AGGRO_MAX) characters[0].aggro = AGGRO_MAX;
 	}
 	else {
 		move_p_M = characters[0].position;
+		characters[0].aggro--;
+		if (characters[0].aggro < AGGRO_MIN) characters[0].aggro = AGGRO_MIN;
 	}
 
 	return move_p_M;
