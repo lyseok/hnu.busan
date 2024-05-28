@@ -41,13 +41,13 @@ typedef struct {
 
 int intro(void);
 int setup(int* trainLength, int* stm, int* probability);
-// int printPattern(int len, int p_M, int p_Z, int p_C);
 int printPattern(int len, int numCharacters);
 int printStatus(int len, int m_p_C, int m_p_Z, int turn, int aggro);
 int printMadongseok(int len, int m_p_M, int aggro);
 int moveCitizen(int p);
 int moveZombie(int p);
 int moveMadongseok(int move);
+int z_action(void);
 int success(void);
 int gameover(void);
 
@@ -67,6 +67,7 @@ int main(void) {
 	int turn = 0;
 	int move = 0;
 	int aggro;
+
 	int m;
 
 	srand((unsigned int)time(NULL));
@@ -90,7 +91,7 @@ int main(void) {
 	int numCharacters = 1 + numCitizens + numZombies;
 
 	//열차 초기 상태 출력
-	printPattern(trainLength, characters, numCharacters);
+	printPattern(trainLength, numCharacters);
 
 	
 	while (1) {
@@ -127,8 +128,10 @@ int main(void) {
 		//마동석 상태 출력
 		printMadongseok(trainLength, m_p_M, aggro);
 
-		printf("cityzen does nothing.\n");
-		printf("zombie attcked nobody\n");
+		//좀비 행동
+		game = z_action();
+		if (game == 2) break;
+
 		printf("madongseok action(0.rest, 1.provoke)>>");
 		scanf_s("%d", &m);
 
@@ -148,7 +151,7 @@ int main(void) {
 
 		turn++;
 	}
-
+	/*
 	//아웃트로
 	if (game == 1) {
 		success();
@@ -156,7 +159,7 @@ int main(void) {
 	if (game == 2) {
 		gameover();
 	}
-	
+	*/
 	return 0;
 }
 
@@ -326,6 +329,46 @@ int moveMadongseok(int move) {
 	return move_p_M;
 }
 
+int z_action(void) {
+	int m_stm;
+
+	if (characters[2].position - characters[0].position <= 1 && characters[1].position - characters[2].position <= 1) {
+		if (characters[0].aggro >= characters[2].aggro) {
+			m_stm = characters[0].stamina--;
+			printf("cityzen does nothing.\n");
+			if (characters[0].stamina == 0) {
+				printf("GAME OVER! madongseok dead...\n");
+				return 2;
+			}
+			printf("Zombie attacked madongseok (aggro: %d vs %d, madongseok stamina: %d -> %d)\n",
+				characters[2].aggro, characters[0].aggro, m_stm, characters[0].stamina);
+		}
+		else {
+			printf("citizen does nothing.\n");
+			printf("GAME OVER! citizen dead...\n");
+			return 2;
+		}
+	}
+	else if (characters[2].position - characters[0].position <= 1) {
+		m_stm = characters[0].stamina--;
+		printf("cityzen does nothing.\n");
+		if (characters[0].stamina == 0) {
+			printf("GAME OVER! madongseok dead...\n");
+			return 2;
+		}
+		printf("Zombie attacked madongseok (madongseok stamina: %d -> %d)\n", m_stm, characters[0].stamina);
+	}
+	else if (characters[1].position - characters[2].position <= 1) {
+		printf("citizen does nothing.\n");
+		printf("GAME OVER! citizen dead...\n");
+		return 2;
+	}
+	else {
+		printf("cityzen does nothing.\n");
+		printf("zombie attcked nobody\n");
+	}
+	return 0;
+}
 
 int success(void) {
 	printf("SUCCESS!\n");
