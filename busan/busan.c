@@ -84,7 +84,6 @@ int main(void) {
 
 	//열차 초기 상태 출력
 	printPattern(trainLength, numCharacters);
-
 	
 	while (1) {
 		//시민 이동
@@ -113,13 +112,15 @@ int main(void) {
 		//마동석 상태 출력
 		printMadongseok(trainLength, m_p_M, aggro);
 
+		characters[0].position = m_p_M;
+
 		//좀비 행동
 		game = z_action();
 		if (game == 2) break;
 
+		// 마동석 행동
 		m_action(trainLength, probability);
 
-		characters[0].position = m_p_M;
 
 
 		if (trainLength - characters[1].position == 1) {
@@ -135,11 +136,12 @@ int main(void) {
 
 		turn++;
 	}
-	/*
+
 	//아웃트로
 	if (game == 1) {
 		success();
 	}
+	/*
 	if (game == 2) {
 		gameover();
 	}
@@ -273,7 +275,7 @@ int moveCitizen(int probability) {
 	int move_p_C;				//움직이고난 후 시민 위치
 	int num = rand() % 100 + 1;
 
-	if (p >= num) {
+	if (p <= num) {
 		move_p_C = characters[1].position + 1;
 		characters[1].aggro++;
 		if (characters[1].aggro > AGGRO_MAX) characters[1].aggro = AGGRO_MAX;
@@ -475,8 +477,7 @@ int pull(int len, int probability) {
 }
 
 int success(void) {
-	printf("SUCCESS!\n");
-	printf("citizen(s) escaped to the next train\n");
+	printf("YOU WIN!\n");
 	return 0;
 }
 
