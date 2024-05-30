@@ -27,7 +27,7 @@
 #define ACTION_PROVOKE 1
 #define ACTION_PULL 2
 
-#define MAX_CHARACTERS 10
+#define MAX_CHARACTERS 25
 
 typedef struct {
     int position;
@@ -81,7 +81,7 @@ int main(void) {
 
     int m_p_M, m_p_Z, m_p_V;
     int turn = 0;
-
+    int all;
     int stage = 1;
 
     srand((unsigned int)time(NULL));
@@ -127,6 +127,20 @@ int main(void) {
                     printCitizen(trainLength, m_p_C[i], aggro[i], i);
                 }
             }
+            printZombie(trainLength, m_p_Z, turn);
+            if (stage == 3) {
+                all = 0;
+                for (int i = 0; i < numCitizens; i++) {
+                    if (citizen[i].life == 1) {
+                        all++;
+                    }
+                }
+                printf("%d citizen(s) alive(s).", all);
+                if (all == 0) {
+                    game = 2;
+                    break;
+                }
+            }
             if (stage == 2) printVillain(trainLength, m_p_V);
             printZombie(trainLength, m_p_Z, turn);
 
@@ -152,6 +166,7 @@ int main(void) {
             // 마동석 행동
             m_action(trainLength, probability);
 
+            
             if (stage == 1 || stage == 2) {
                 // 스테이지 1, 2: 한 명의 시민이 위치가 trainLength-1이면 다음 스테이지로 이동
                 if (citizen[0].life == 1 && citizen[0].position >= trainLength-1) {
@@ -253,7 +268,6 @@ int setup(int stage, int trainLength, int* numCitizens) {
     if (stage >= 3) {
         *numCitizens = trainLength / 4 + rand() % (trainLength / 2 - trainLength / 4);
     }
-
     for (int i = 0; i < *numCitizens; i++) {
         int position;
         do {
@@ -322,7 +336,7 @@ int printCitizen(int len, int m_p_C, int aggro, int i) {
     else {
         printf("citizen %d: %d -> %d (aggro: %d -> %d)\n", i, len - citizen[i].position, len - m_p_C, aggro, citizen[i].aggro);
     }
-
+    
     citizen[i].position = m_p_C;
 
     return 0;
@@ -425,7 +439,13 @@ int moveZombie(int p) {
         move_p_Z = zombie[0].position;
         return move_p_Z;
     }
-    if (maDongSeok.aggro > citizen[0].aggro) {
+    int aggro = 0;
+    for (int i = 0; i < MAX_CHARACTERS; i++) {
+        if (citizen[i].life == 1) {
+            if (aggro < citizen[i].aggro) aggro = citizen[i].aggro;
+        }
+    }
+    if (maDongSeok.aggro > aggro) {
         if (maDongSeok.position < zombie[0].position) {
             move_p_Z = zombie[0].position - 1;
             if (maDongSeok.position == move_p_Z) move_p_Z = zombie[0].position;
@@ -436,14 +456,8 @@ int moveZombie(int p) {
         }
     }
     else {
-        if (citizen[0].position < zombie[0].position) {
-            move_p_Z = zombie[0].position - 1;
-            if (citizen[0].position == move_p_Z) move_p_Z = zombie[0].position;
-        }
-        else {
             move_p_Z = zombie[0].position + 1;
-            if (citizen[0].position == move_p_Z) move_p_Z = zombie[0].position;
-        }
+        
     }
     return move_p_Z;
 }
