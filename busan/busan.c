@@ -47,7 +47,7 @@ int printVillain(int, int);
 int printZombie(int, int, int);
 int printMadongseok(int, int, int);
 
-int moveCitizen(int, int);
+int moveCitizen(int, int, int);
 int moveVillain(int);
 int moveZombie(int);
 int moveMadongseok(void);
@@ -109,7 +109,8 @@ int main(void) {
             //시민 이동
             for (int i = 0; i < numCitizens; i++) {
                 if (citizen[i].life == 1) {
-                    m_p_C[i] = moveCitizen(probability, i);
+                    aggro[i] = citizen[i].aggro;
+                    m_p_C[i] = moveCitizen(probability, i, trainLength);
                 }
             }
             if (stage == 2) m_p_V = moveVillain(m_p_C[0]);
@@ -123,20 +124,21 @@ int main(void) {
             //시민, 빌런, 좀비 상태 출력
             for (int i = 0; i < numCitizens; i++) {
                 if (citizen[i].life == 1) {
-                    printCitizen(trainLength, m_p_C[i], citizen[i].aggro, i);
+                    printCitizen(trainLength, m_p_C[i], aggro[i], i);
                 }
             }
             if (stage == 2) printVillain(trainLength, m_p_V);
             printZombie(trainLength, m_p_Z, turn);
 
             //마동석 이동
+            aggro[0] = maDongSeok.aggro;
             m_p_M = moveMadongseok();
 
             //열차 상태 출력
             printPattern(trainLength, numCharacters, stage);
 
             //마동석 상태 출력
-            printMadongseok(trainLength, m_p_M, maDongSeok.aggro);
+            printMadongseok(trainLength, m_p_M, aggro[0]);
 
             if (stage == 2) {
                 // 빌런 행동
@@ -150,17 +152,46 @@ int main(void) {
             // 마동석 행동
             m_action(trainLength, probability);
 
-            // 모든 살아있는 시민이 기차의 왼쪽 끝에 도착했는지 확인
-            int allEscaped = 0;
-            for (int i = 0; i < numCitizens; i++) {
-                if (citizen[i].life == 1 && citizen[i].position >= 14) {
-                    allEscaped = 1;
+            if (stage == 1 || stage == 2) {
+                // 스테이지 1, 2: 한 명의 시민이 위치가 trainLength-1이면 다음 스테이지로 이동
+                if (citizen[0].life == 1 && citizen[0].position >= trainLength-1) {
+                    game = 1;
                     break;
                 }
             }
-            if (allEscaped) {
-                game = 1;
-                break;
+            else if (stage == 3) {
+                // 스테이지 3: 모든 시민이 위치가 trainLength-1이어야 다음 스테이지로 이동
+                int allEscaped = 1;
+                for (int i = 0; i < numCitizens; i++) {
+                    if (citizen[i].life == 1 && citizen[i].position < trainLength - 1) {
+                        allEscaped = 0;
+                        break;
+                    }
+                }
+                if (allEscaped) {
+                    game = 1;
+                    break;
+                }
+            }
+            else {
+                // 모든 살아있는 시민이 기차의 왼쪽 끝에 도착했는지 확인
+                int c_life = 0;
+                for (int i = 0; i < numCitizens; i++) {
+                    if (citizen[i].life == 1) c_life = 1;
+                }
+                if (c_life == 0) break;
+
+                int allEscaped = 1;
+                for (int i = 0; i < numCitizens; i++) {
+                    if (citizen[i].life == 1 && citizen[i].position != 0) {
+                        allEscaped = 0;
+                        break;
+                    }
+                }
+                if (allEscaped) {
+                    game = 1;
+                    break;
+                }
             }
 
             turn++;
@@ -224,7 +255,22 @@ int setup(int stage, int trainLength, int* numCitizens) {
     }
 
     for (int i = 0; i < *numCitizens; i++) {
-        citizen[i].position = (i == 0) ? 6 : 3 + rand() % (trainLength - 6); // 시민
+        int position;
+        do {
+            position = 6 + rand() % (trainLength - 6);
+            int unique = 1;
+            for (int j = 0; j < i; j++) {
+                if (citizen[j].position == position) {
+                    unique = 0;
+                    break;
+                }
+            }
+            if (unique) {
+                citizen[i].position = position;
+                break;
+            }
+        } while (1);
+        citizen[0].position = 6;
         citizen[i].aggro = 1;
         citizen[i].life = 1;
     }
@@ -336,13 +382,14 @@ int printMadongseok(int len, int m_p_M, int aggro) {
     return 0;
 }
 
-int moveCitizen(int probability, int i) {
+int moveCitizen(int probability, int i, int trainLength) {
     int p = 100 - probability; //확률
     int move_p_C; //움직이고난 후 시민 위치
     int num = rand() % 100 + 1;
 
     if (p <= num) {
         move_p_C = citizen[i].position + 1;
+        if (citizen[i].position >= trainLength) move_p_C = trainLength;
         citizen[i].aggro++;
         if (citizen[i].aggro > AGGRO_MAX) citizen[i].aggro = AGGRO_MAX;
     }
