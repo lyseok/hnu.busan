@@ -166,10 +166,10 @@ int main(void) {
             // 마동석 행동
             m_action(trainLength, probability);
 
-            
+
             if (stage == 1 || stage == 2) {
                 // 스테이지 1, 2: 한 명의 시민이 위치가 trainLength-1이면 다음 스테이지로 이동
-                if (citizen[0].life == 1 && citizen[0].position >= trainLength-1) {
+                if (citizen[0].life == 1 && citizen[0].position >= trainLength - 1) {
                     game = 1;
                     break;
                 }
@@ -336,7 +336,7 @@ int printCitizen(int len, int m_p_C, int aggro, int i) {
     else {
         printf("citizen %d: %d -> %d (aggro: %d -> %d)\n", i, len - citizen[i].position, len - m_p_C, aggro, citizen[i].aggro);
     }
-    
+
     citizen[i].position = m_p_C;
 
     return 0;
@@ -456,8 +456,8 @@ int moveZombie(int p) {
         }
     }
     else {
-            move_p_Z = zombie[0].position + 1;
-        
+        move_p_Z = zombie[0].position + 1;
+
     }
     return move_p_Z;
 }
