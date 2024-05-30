@@ -26,6 +26,7 @@
 #define ATK_DONGSEOK 2
 
 // 마동석 행동
+#define MADONGSEOK 0
 #define ACTION_REST 0
 #define ACTION_PROVOKE 1
 #define ACTION_PULL 2
@@ -66,7 +67,6 @@ int main(void) {
 	int numCitizens = 1;
 	int numZombies = 1;
 
-	int p_M = 2, p_Z = 3, p_C = 6;
 	int m_p_M, m_p_Z, m_p_C;
 	int turn = 0;
 	int aggro;
@@ -103,7 +103,7 @@ int main(void) {
 		characters[2].position = m_p_Z;
 
 		//마동석 이동
-		aggro = characters[0].aggro;
+		aggro = characters[MADONGSEOK].aggro;
 		m_p_M = moveMadongseok();
 
 		//열차 상태 출력
@@ -112,7 +112,7 @@ int main(void) {
 		//마동석 상태 출력
 		printMadongseok(trainLength, m_p_M, aggro);
 
-		characters[0].position = m_p_M;
+		characters[MADONGSEOK].position = m_p_M;
 
 		//좀비 행동
 		game = z_action();
@@ -132,7 +132,7 @@ int main(void) {
 			game = 2;
 			break;
 		}
-		
+
 
 		turn++;
 	}
@@ -184,10 +184,10 @@ int setup(int* trainLength, int* probability) {
 		}
 	}
 
-	characters[0].position = 2; // 마동석
-	characters[0].type = 0;
-	characters[0].stamina = stm;
-	characters[0].aggro = 1;
+	characters[MADONGSEOK].position = 2; // 마동석
+	characters[MADONGSEOK].type = 0;
+	characters[MADONGSEOK].stamina = stm;
+	characters[MADONGSEOK].aggro = 1;
 	characters[1].position = 6; // 시민
 	characters[1].type = 1;
 	characters[1].aggro = 1;
@@ -259,13 +259,13 @@ int printStatus(int len, int m_p_C, int m_p_Z, int turn, int aggro) {
 }
 
 int printMadongseok(int len, int m_p_M, int aggro) {
-	if (characters[0].position == m_p_M) {
-		printf("madongseok: stay %d(aggro: %d -> %d, stamina: %d)\n", 
-			len - characters[0].position, aggro, characters[0].aggro, characters[0].stamina);
+	if (characters[MADONGSEOK].position == m_p_M) {
+		printf("madongseok: stay %d(aggro: %d -> %d, stamina: %d)\n",
+			len - characters[MADONGSEOK].position, aggro, characters[MADONGSEOK].aggro, characters[MADONGSEOK].stamina);
 	}
 	else {
-		printf("madongseok: %d -> %d (aggro: %d -> %d, stamina: %d)\n", 
-			len - characters[0].position, len - m_p_M, aggro, characters[0].aggro, characters[0].stamina);
+		printf("madongseok: %d -> %d (aggro: %d -> %d, stamina: %d)\n",
+			len - characters[MADONGSEOK].position, len - m_p_M, aggro, characters[MADONGSEOK].aggro, characters[MADONGSEOK].stamina);
 	}
 	printf("\n");
 }
@@ -295,14 +295,14 @@ int moveZombie(int p) {
 		move_p_Z = characters[2].position;
 		return move_p_Z;
 	}
-	if (characters[0].aggro > characters[1].aggro) {
-		if (characters[0].position < characters[2].position) {
+	if (characters[MADONGSEOK].aggro > characters[1].aggro) {
+		if (characters[MADONGSEOK].position < characters[2].position) {
 			move_p_Z = characters[2].position - 1;
-			if (characters[0].position == move_p_Z) move_p_Z = characters[2].position;
+			if (characters[MADONGSEOK].position == move_p_Z) move_p_Z = characters[2].position;
 		}
 		else {
 			move_p_Z = characters[2].position + 1;
-			if (characters[0].position == move_p_Z) move_p_Z = characters[2].position;
+			if (characters[MADONGSEOK].position == move_p_Z) move_p_Z = characters[2].position;
 		}
 	}
 	else {
@@ -322,31 +322,31 @@ int moveMadongseok(void) {
 	int move_p_M;
 	int move;
 
-	if (characters[2].position - characters[0].position == 1) {
+	if (characters[2].position - characters[MADONGSEOK].position == 1) {
 		while (1) {
 			printf("madongseok move(0:stay)>>");
 			scanf_s("%d", &move);
-			if (move == 0) break;
+			if (move == MOVE_STAY) break;
 		}
 	}
 	else {
 		while (1) {
 			printf("madongseok move(0:stay, 1:left)>>");
 			scanf_s("%d", &move);
-			if (move == 0 || move == 1) break;
+			if (move == MOVE_STAY || move == MOVE_LEFT) break;
 		}
 	}
-	
 
-	if (move == 1) {
-		move_p_M = characters[0].position + 1;
-		characters[0].aggro++;
-		if(characters[0].aggro > AGGRO_MAX) characters[0].aggro = AGGRO_MAX;
+
+	if (move == MOVE_LEFT) {
+		move_p_M = characters[MADONGSEOK].position + 1;
+		characters[MADONGSEOK].aggro++;
+		if (characters[MADONGSEOK].aggro > AGGRO_MAX) characters[MADONGSEOK].aggro = AGGRO_MAX;
 	}
 	else {
-		move_p_M = characters[0].position;
-		characters[0].aggro--;
-		if (characters[0].aggro < AGGRO_MIN) characters[0].aggro = AGGRO_MIN;
+		move_p_M = characters[MADONGSEOK].position;
+		characters[MADONGSEOK].aggro--;
+		if (characters[MADONGSEOK].aggro < AGGRO_MIN) characters[MADONGSEOK].aggro = AGGRO_MIN;
 	}
 
 	return move_p_M;
@@ -355,16 +355,16 @@ int moveMadongseok(void) {
 int z_action(void) {
 	int m_stm;
 
-	if (characters[2].position - characters[0].position <= 1 && characters[1].position - characters[2].position <= 1) {
-		if (characters[0].aggro >= characters[2].aggro) {
-			m_stm = characters[0].stamina--;
+	if (characters[2].position - characters[MADONGSEOK].position <= 1 && characters[1].position - characters[2].position <= 1) {
+		if (characters[MADONGSEOK].aggro >= characters[2].aggro) {
+			m_stm = characters[MADONGSEOK].stamina--;
 			printf("cityzen does nothing.\n");
-			if (characters[0].stamina == 0) {
+			if (characters[MADONGSEOK].stamina == 0) {
 				printf("GAME OVER! madongseok dead...\n");
 				return 2;
 			}
 			printf("Zombie attacked madongseok (aggro: %d vs %d, madongseok stamina: %d -> %d)\n",
-				characters[2].aggro, characters[0].aggro, m_stm, characters[0].stamina);
+				characters[2].aggro, characters[MADONGSEOK].aggro, m_stm, characters[MADONGSEOK].stamina);
 		}
 		else {
 			printf("citizen does nothing.\n");
@@ -372,14 +372,14 @@ int z_action(void) {
 			return 2;
 		}
 	}
-	else if (characters[2].position - characters[0].position <= 1) {
-		m_stm = characters[0].stamina--;
+	else if (characters[2].position - characters[MADONGSEOK].position <= 1) {
+		m_stm = characters[MADONGSEOK].stamina--;
 		printf("cityzen does nothing.\n");
-		if (characters[0].stamina == 0) {
+		if (characters[MADONGSEOK].stamina == 0) {
 			printf("GAME OVER! madongseok dead...\n");
 			return 2;
 		}
-		printf("Zombie attacked madongseok (madongseok stamina: %d -> %d)\n", m_stm, characters[0].stamina);
+		printf("Zombie attacked madongseok (madongseok stamina: %d -> %d)\n", m_stm, characters[MADONGSEOK].stamina);
 	}
 	else if (characters[1].position - characters[2].position <= 1) {
 		printf("citizen does nothing.\n");
@@ -395,19 +395,20 @@ int z_action(void) {
 
 int m_action(int len, int probability) {
 	int m;
+
 	while (1) {
-		if (characters[2].position - characters[0].position == 1) {
+		if (characters[2].position - characters[MADONGSEOK].position == 1) {
 			printf("madongseok action(0.rest, 1.provoke, 2.pull)>>");
 			scanf_s("%d", &m);
-			if (m == 0) {
+			if (m == ACTION_REST) {
 				rest(len);
 				break;
 			}
-			else if (m == 1) {
+			else if (m == ACTION_PROVOKE) {
 				provoke(len);
 				break;
 			}
-			else if (m == 2) {
+			else if (m == ACTION_PULL) {
 				pull(len, probability);
 				break;
 			}
@@ -415,11 +416,11 @@ int m_action(int len, int probability) {
 		else {
 			printf("madongseok action(0.rest, 1.provoke)>>");
 			scanf_s("%d", &m);
-			if (m == 0) {
+			if (m == ACTION_REST) {
 				rest(len);
 				break;
 			}
-			else if (m == 1) {
+			else if (m == ACTION_PROVOKE) {
 				provoke(len);
 				break;
 			}
@@ -431,48 +432,48 @@ int m_action(int len, int probability) {
 
 int rest(int len) {
 	int aggro, stm;
-	aggro = characters[0].aggro--;
-	stm = characters[0].stamina++;
+	aggro = characters[MADONGSEOK].aggro--;
+	stm = characters[MADONGSEOK].stamina++;
 
-	if (characters[0].aggro < AGGRO_MIN) characters[0].aggro = AGGRO_MIN;
-	if (characters[0].stamina > STM_MAX) characters[0].stamina = STM_MAX;
+	if (characters[MADONGSEOK].aggro < AGGRO_MIN) characters[MADONGSEOK].aggro = AGGRO_MIN;
+	if (characters[MADONGSEOK].stamina > STM_MAX) characters[MADONGSEOK].stamina = STM_MAX;
 
 	printf("\nmadongseok rests...\n");
 	printf("madongseok: %d (aggro: %d -> %d, stamina: %d -> %d)\n\n",
-		len - characters[0].position, aggro, characters[0].aggro, stm, characters[0].stamina);
+		len - characters[MADONGSEOK].position, aggro, characters[MADONGSEOK].aggro, stm, characters[MADONGSEOK].stamina);
 }
 
 int provoke(int len) {
 	int aggro;
-	aggro = characters[0].aggro;
-	characters[0].aggro = AGGRO_MAX;
+	aggro = characters[MADONGSEOK].aggro;
+	characters[MADONGSEOK].aggro = AGGRO_MAX;
 
 	printf("\nmadongseok provoked zombie...\n");
 	printf("madongseok: %d (aggro: %d -> %d, stamina: %d)\n\n",
-		len - characters[0].position, aggro, characters[0].aggro, characters[0].stamina);
+		len - characters[MADONGSEOK].position, aggro, characters[MADONGSEOK].aggro, characters[MADONGSEOK].stamina);
 }
 
 int pull(int len, int probability) {
 	int aggro, stm;
 	int p = 100 - probability;
 	int num = rand() % 100 + 1;
-	aggro = characters[0].aggro;
-	stm = characters[0].stamina--;
-	characters[0].aggro += 2;
+	aggro = characters[MADONGSEOK].aggro;
+	stm = characters[MADONGSEOK].stamina--;
+	characters[MADONGSEOK].aggro += 2;
 
-	if (characters[0].aggro > AGGRO_MAX) characters[0].aggro = AGGRO_MAX;
-	if (characters[0].stamina < STM_MIN) characters[0].stamina = STM_MIN;
+	if (characters[MADONGSEOK].aggro > AGGRO_MAX) characters[MADONGSEOK].aggro = AGGRO_MAX;
+	if (characters[MADONGSEOK].stamina < STM_MIN) characters[MADONGSEOK].stamina = STM_MIN;
 
 	if (p >= num) {
 		characters[2].pull = 1;
 		printf("\nmadongseok pulled zombie...Next turn, it can't move\n");
 		printf("madongseok: %d (aggro: %d -> %d, stamina: %d -> %d)\n\n",
-			len - characters[0].position, aggro, characters[0].aggro, stm, characters[0].stamina);
+			len - characters[MADONGSEOK].position, aggro, characters[MADONGSEOK].aggro, stm, characters[MADONGSEOK].stamina);
 	}
 	else {
 		printf("\nmadongseok failed to pull zombie\n");
 		printf("madongseok: %d (aggro: %d -> %d, stamina: %d -> %d)\n\n",
-			len - characters[0].position, aggro, characters[0].aggro, stm, characters[0].stamina);
+			len - characters[MADONGSEOK].position, aggro, characters[MADONGSEOK].aggro, stm, characters[MADONGSEOK].stamina);
 	}
 }
 
