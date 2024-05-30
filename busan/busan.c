@@ -3,6 +3,15 @@
 #include <time.h>
 #include <Windows.h>
 
+/*
+ 코드는 3-3 스테이지3:시민'들'까지 완료하였습니다.
+ 살아있는 모든 시민들이 열차 앞까지 이동하였는지를 함수로 옮기지 못하고 메인함수에 두어 죄송합니다.
+ 코드들을 작성하다보니 생각보다 지져분해져서 가독성은 많이 떨어지는 것 같습니다.
+ 그래도 이번기회로 성장하는데 많은 도움이 된 것 같습니다. 
+ 감사합니다.
+*/
+
+
 // 파라미터
 #define LEN_MIN 15 // 기차 길이
 #define LEN_MAX 50
@@ -66,7 +75,6 @@ Character maDongSeok;
 Character villain;
 Character zombie[MAX_CHARACTERS];
 Character citizen[MAX_CHARACTERS];
-Character characters[MAX_CHARACTERS];
 
 int main(void) {
     int game = 0;
